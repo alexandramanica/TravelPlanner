@@ -1,4 +1,5 @@
 <template>
+  <navbar-form/>
   <div class="container">
     <div class="text-section">
       <p class="subheading">Your Gateway to the World</p>
@@ -17,7 +18,11 @@
 </template>
 
 <script>
-
+import NavbarForm from '../components/NavbarForm.vue'
+export default {
+  name: "HomeView",
+  components: { NavbarForm },
+  }
 </script>
 
 <style scoped>

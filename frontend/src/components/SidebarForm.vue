@@ -1,162 +1,148 @@
 <template>
-    <div class="app">
-      <!-- Sidebar -->
-      <aside :class="{ open: isSidebarOpen }" class="sidebar">
-        <div class="sidebar-header">
-          <h2>My Sidebar</h2>
-          <button class="close-btn" @click="toggleSidebar">×</button>
-        </div>
-        <nav class="sidebar-nav">
-          <ul>
-            <li><router-link to="/">Home</router-link></li>
-            <li><router-link to="/about">About</router-link></li>
-            <li><router-link to="/services">Services</router-link></li>
-            <li><router-link to="/contact">Contact</router-link></li>
+  <div class="app">
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <!-- Brand -->
+        <a class="navbar-brand" href="#">
+          <i class="bi bi-globe-americas me-2"></i>
+          Explore
+        </a>
+        <!-- Toggler -->
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- Navbar Links -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <router-link to="/" class="nav-link">
+                <i class="bi bi-house-door me-2"></i>
+                Home
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/about" class="nav-link">
+                <i class="bi bi-info-circle me-2"></i>
+                About
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/services" class="nav-link">
+                <i class="bi bi-briefcase me-2"></i>
+                Services
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link to="/contact" class="nav-link">
+                <i class="bi bi-envelope me-2"></i>
+                Contact
+              </router-link>
+            </li>
           </ul>
-        </nav>
-      </aside>
-  
-      <!-- Main Content -->
-      <main class="main-content">
-        <button class="toggle-btn" @click="toggleSidebar">☰</button>
-        <router-view></router-view>
-      </main>
-    </div>
-  </template>
-  
-  <script>
-  import { ref } from 'vue';
-  
-  export default {
-    name: 'SidebarForm',
-    setup() {
-      const isSidebarOpen = ref(false);
-  
-      const toggleSidebar = () => {
-        isSidebarOpen.value = !isSidebarOpen.value;
-      };
-  
-      return {
-        isSidebarOpen,
-        toggleSidebar,
-      };
-    },
-  };
-  </script>
+        </div>
+      </div>
+    </nav>
+    <main class="main-content">
+      <router-view></router-view>
+    </main>
+  </div>
+</template>
 
+
+<script>
+export default {
+  name: "NavbarMenuForm",
+};
+</script>
 
 <style scoped>
-
-body, html {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* App Container */
-.app {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 250px;
-  background-color: #2a0052;
-  color: white;
-  position: fixed;
-  top: 0;
-  left: -250px;
-  height: 100%;
-  overflow-y: auto;
-  transition: left 0.3s ease-in-out;
-  z-index: 1000;
-}
-
-.sidebar.open {
-  left: 0;
-}
-
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background-color: #2a0052;
-}
-
-.sidebar-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.sidebar-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar-nav li {
-  margin: 1rem 0;
-}
-
-.sidebar-nav a {
-  color: white;
-  text-decoration: none;
+/* Navbar */
+.navbar {
+  background: linear-gradient(135deg, #2a0052 0%, #4a0082 100%);
   padding: 0.5rem 1rem;
-  display: block;
-  transition: background-color 0.3s ease;
+  height: auto;
+  transition: all 0.3s ease-in-out;
 }
 
-.sidebar-nav a:hover {
-  background-color: #4c178b;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: white;
+.navbar-brand {
+  color: #fff;
   font-size: 1.5rem;
-  cursor: pointer;
+  font-weight: bold;
+}
+
+.navbar-brand:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.7%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem 1rem;
+  position: relative;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.nav-link.active {
+  color: #fff;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 1rem;
+  right: 1rem;
+  height: 2px;
+  background: #ff74ff;
 }
 
 /* Main Content */
 .main-content {
-  margin-left: 250px;
-  width: calc(100% - 250px);
-  padding: 1rem;
-  transition: margin-left 0.3s ease-in-out;
+  min-height: 100vh;
 }
 
-.toggle-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 1001;
-}
-
-.sidebar.open ~ .main-content {
-  margin-left: 250px;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    left: -100%;
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+  .navbar-nav {
+    flex-direction: column;
+    padding: 0.5rem 0;
   }
 
-  .sidebar.open {
+  .nav-link {
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .nav-link.active::after {
     left: 0;
+    right: 0;
   }
 
-  .main-content {
-    margin-left: 0;
-    width: 100%;
+  .navbar-collapse {
+    background: linear-gradient(135deg, #2a0052 0%, #4a0082 100%);
+    padding: 0.5rem;
   }
 }
 </style>
+
+

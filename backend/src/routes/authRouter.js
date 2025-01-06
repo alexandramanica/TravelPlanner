@@ -1,7 +1,8 @@
 const express = require("express");
 const { validateRegisterUser, validateLoginUser } = require("../middleware/validators/authValidator.js");
-const { registerUser, loginUser } = require("../controllers/authController.js");
+const { registerUser, loginUser, logoutUser } = require("../controllers/authController.js");
 const handleValidation = require("../middleware/validationMiddleware.js");
+const { verifyToken } = require("../middleware/authMiddleware.js");
 
 const authRouter = express.Router();
 
@@ -10,5 +11,8 @@ authRouter.post("/register", validateRegisterUser, handleValidation, registerUse
 
 // Route for logging in a user
 authRouter.post("/login", validateLoginUser, handleValidation, loginUser);
+
+// Route for logging out a user
+authRouter.post("/logout", verifyToken, logoutUser);
 
 module.exports = authRouter;

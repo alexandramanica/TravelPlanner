@@ -42,7 +42,7 @@ const generateUsers = async (req, res) => {
 
 const getUsers = async (req, res) => {
     try {
-        logger.info("Fetching all users from the database...");
+        logger.info("Fetching all users from the database.");
 
         // Fetch all users from the 'users' collection
         const querySnapshot = await db.collection("users").get();
@@ -97,4 +97,51 @@ const getUser = async (req, res) => {
     }
 };
 
-module.exports = { generateUsers, getUsers, getUser };
+const fetchUsers = async () => {
+    logger.info("Fetching all users from the database for other controllers.");
+    const querySnapshot = await db.collection("users").get();
+
+    if (querySnapshot.empty) {
+        logger.warn("No users found in the database.");
+        return [];
+    }
+
+    return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    }));
+};
+
+const fetchUserById = async (userId) => {
+    try {
+        logger.info(`Fetching user with ID: ${userId} for other controllers.`);
+
+        // Fetch the user document by ID
+        const querySnapshot = await db.collection("users").doc(userId).get();
+
+        // Check if the document exists
+        if (!querySnapshot.exists) {
+            logger.warn(`User with ID ${userId} not found.`);
+            return null; // Return null if user is not found
+        }
+
+        // Prepare the user object
+        const user = {
+            id: querySnapshot.id,
+            ...querySnapshot.data()
+        };
+
+        logger.info(`User with ID ${userId} fetched successfully.`);
+        return user; // Return the user object
+
+    } catch (error) {
+        logger.error(`Error fetching user with ID ${userId}:`, {
+            error: error.message,
+        });
+        throw new Error("Error fetching user"); // Throw error to be handled by calling function
+    }
+};
+
+
+
+module.exports = { generateUsers, getUsers, getUser, fetchUsers, fetchUserById };

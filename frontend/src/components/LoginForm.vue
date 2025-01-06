@@ -67,9 +67,15 @@
       </div>
     </div>
 
-    <div v-if="showAlert" class="alert alert-danger mt-3" role="alert">
-      {{ error }}
+    <div v-if="showAlert" class="alert alert-danger mt-3 d-flex align-items-center" role="alert">
+      <ul class="list-unstyled mb-0">
+        <li v-for="(err, index) in error.split(', ')" :key="index" class="d-flex align-items-center">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>
+          {{ err }}
+        </li>
+      </ul>
     </div>
+
   </div>
 </template>
 
@@ -107,13 +113,32 @@ export default {
       store.commit('setToken', token);
       store.commit('setUserId', userId);
       
-      router.push('/dashboard');
+      router.push('/attractions');
     } catch (err) {
-        console.error(err);
-        error.value = 'Your password or email might be wrong. Please try again.';
-        console.log('Setting showAlert to true'); 
-        showAlert.value = true;
+        
+      console.log('Error response:', err.response.data.errors);
+      console.error('Full error object:', err);
+      console.error('Response data:', err.response ? err.response.data : 'No response data');
+      console.error('Errors array:', err.response?.data?.errors || 'No errors array');
 
+      // Handle different response structures
+      if (err.response && err.response.data) {
+        if (err.response.data.errors) {
+          // errors array
+          error.value = err.response.data.errors.map((e) => e.msg).join(', ');
+        } else if (err.response.data.message) {
+          //single message
+          error.value = err.response.data.message;
+        } else {
+          // unknown error format
+          error.value = 'An unknown error occurred. Please try again.';
+        }
+      } else {
+        // no response data
+        error.value = 'Unable to connect to the server. Please try again later.';
+      }
+
+        showAlert.value = true;
         setTimeout(() => {
           console.log('Setting showAlert to false'); 
           showAlert.value = false;

@@ -9,24 +9,7 @@ const validateGetUser = [
         .withMessage("User ID cannot be empty"),
 ];
 
-// Validation for creating a user (e.g., during registration)
-const validateRegisterUser = [
-    body("firstName")
-        .notEmpty()
-        .withMessage("First name is required"),
-    body("lastName")
-        .notEmpty()
-        .withMessage("Last name is required"),
-    body("email")
-        .isEmail()
-        .withMessage("Email must be valid"),
-    body("password")
-        .isLength({ min: 6 })
-        .withMessage("Password must be at least 6 characters long"),
-];
-
 module.exports = {
-    validateGetUser, // Export as is
-    validateRegisterUser,
+    validateGetUser
 };
 

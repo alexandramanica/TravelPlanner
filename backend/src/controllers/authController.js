@@ -14,8 +14,10 @@ const registerUser = async (req, res) => {
         const userSnapshot = await usersRef.where("email", "==", email).get();
 
         if (!userSnapshot.empty) {
-            logger.warn(`Registration failed: User with email ${email} already exists`);
-            return res.status(400).json({ message: "User already exists" });
+            logger.warn(`Registration failed: User with email ${email} already exists!`);
+            return res.status(400).json({ 
+                message: `User with email ${email} already exists` 
+            });
         }
 
         // Hash the password
@@ -39,9 +41,13 @@ const registerUser = async (req, res) => {
         res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
         logger.error(`Error registering user with email ${req.body.email}: ${error.message}`, { error });
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ 
+            message: "Server error. Please try again later.", 
+            error: error.message 
+        });
     }
 };
+
 
 const loginUser = async (req, res) => {
     try {
@@ -56,26 +62,32 @@ const loginUser = async (req, res) => {
         if (userSnapshot.empty) {
             logger.warn(`Login failed: No account found for email ${email}`);
             return res.status(400).json({
-                message: "No account registered with the provided email",
+                message: "No account registered with the provided email!",
             });
         }
 
         // Check password and generate JWT token
-        const userDoc = userSnapshot.docs[0]; // Assuming email is unique
+        const userDoc = userSnapshot.docs[0]; //Email is unique - acces the first element in the array of docs returned by the query
         const userData = userDoc.data();
 
         const isPasswordValid = await bcrypt.compare(password, userData.password);
 
         if (!isPasswordValid) {
             logger.warn(`Login failed: Invalid credentials for email ${email}`);
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({ message: `Invalid credentials for email ${email}!` });
         }
 
         // Generate JWT token
         const secret = process.env.SECRET_KEY;
-        const jwtToken = jwt.sign({ email: userData.email }, secret, {
-            expiresIn: "3h",
-        });
+        const jwtToken = jwt.sign(
+            {
+                id: userDoc.id,
+                email: userData.email
+            },
+            secret,
+            { expiresIn: "3h" }
+        );
+
 
         logger.info(`User logged in successfully with email: ${email}`);
         res.status(200).json({
@@ -89,4 +101,23 @@ const loginUser = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser };
+const logoutUser = async (req, res) => {
+    try {
+
+        const token = req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
+            logger.warn("Logout failed: No token provided");
+            return res.status(400).json({ message: "No token provided for logout" });
+        }
+
+        logger.info("User logged out successfully");
+        res.status(200).json({ message: "Logout successful" });
+    } catch (error) {
+        logger.error("Error logging out user:", { error: error.message });
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+
+module.exports = { registerUser, loginUser, logoutUser };

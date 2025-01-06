@@ -1,4 +1,5 @@
 <template>
+    <navbar-form/>
     <register-form />
 </template>
 
@@ -6,8 +7,9 @@
 
 <script>
 import RegisterForm from "../components/RegisterForm.vue";
+import NavbarForm from "../components/NavbarForm.vue";
 export default {
     name: "RegisterView",
-    components: { RegisterForm },
+    components: { RegisterForm, NavbarForm },
 };
 </script>
