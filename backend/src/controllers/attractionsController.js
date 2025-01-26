@@ -52,38 +52,6 @@ const generateAttractions = async (req, res) => {
                         "Romantic", "Pet-Friendly", "Nature", "Other"],
                     faker.number.int({ min: 1, max: 3 })
                 ),
-                transportationOptions: [
-                    {
-                        type: "Metro",
-                        details: `Take Metro Line ${faker.number.int({ min: 1, max: 10 })} to ${
-                            faker.company.name().split(" ")[0]
-                        } Station`,
-                        cost: faker.number.float({
-                            min: 10,
-                            max: 50,
-                            precision: 0.01
-                        })
-                    },
-                    {
-                        type: "Taxi",
-                        details: `You can take a private taxi, Uber or Bolt to get there. `,
-                        cost: faker.number.float({
-                            min: 10,
-                            max: 50,
-                            precision: 0.01
-                        })
-                    },
-                    {
-                        type: "Bus",
-                        details: `Take Bus ${faker.number.int({ min: 1, max: 10}) } to 
-                            ${faker.company.name().split(" ")[0]} Stop`,
-                        cost: faker.number.float({
-                            min: 10,
-                            max: 50,
-                            precision: 0.01
-                        })
-                    }
-                ],
                 tips: faker.lorem.sentence(),
                 metadata: {
                     createdAt: new Date().toISOString(),
@@ -163,6 +131,24 @@ const getAttraction = async (req, res) => {
     }
 };
 
+const getAttractionCount = async (req, res) => {
+    try {
+        logger.info("Fetching the total count of attractions...");
+
+        // Fetch all attractions from the 'attractions' collection
+        const querySnapshot = await db.collection("attractions").get();
+
+        // Getting the count of attractions
+        const attractionCount = querySnapshot.size;
+
+        logger.info(`Total number of attractions: ${attractionCount}`);
+        res.status(200).json({ count: attractionCount });
+    } catch (error) {
+        logger.error("Error fetching the attraction count:", { error: error.message });
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+}
+
 const createAttraction = async (req, res) => {
     try {
         logger.info("Adding new attraction...");
@@ -189,7 +175,6 @@ const createAttraction = async (req, res) => {
             entryFee: req.body.entryFee,
             facilities: req.body.facilities,
             tags: req.body.tags,
-            transportationOptions: req.body.transportationOptions,
             tips: req.body.tips,
             metadata: {
                 createdAt: new Date().toISOString(),
@@ -250,11 +235,15 @@ const deleteAttraction = async (req, res) => {
 const updateAttraction = async (req, res) => {
     try {
         const attractionId = req.params.attractionId;
-        const { ownerId, ...updatedData } = req.body;
+        
+        const { ...updatedData } = req.body;
+        const ownerId = updatedData.metadata.ownerID;
         if (ownerId && ownerId !== req.user.id) {
             logger.warn(`Owner ID mismatch: User ${req.user.id} attempted to add attraction for Owner ID ${ownerId}`);
             return res.status(403).json({ message: "You are not authorized to perform this action" });
         }
+
+        console.log(ownerId);
 
         logger.info(`Updating attraction with ID: ${attractionId}`);
 
@@ -284,7 +273,11 @@ const updateAttraction = async (req, res) => {
         await attractionRef.update(updatedData);
 
         logger.info(`Attraction with ID ${attractionId} updated successfully.`);
-        res.status(200).json({ message: "Attraction updated successfully" });
+        res.status(200).json({
+            message: "Attraction updated successfully",
+            attraction: { ...updatedData},
+        });
+
     } catch (error) {
         logger.error(`Error updating attraction with ID ${req.params.attractionId}:`, {
             error: error.message,
@@ -293,5 +286,37 @@ const updateAttraction = async (req, res) => {
     }
 };
 
+const getUserAttractions = async (req, res) => {
+    try {
+        const userId = req.params.userId; // Get userId from route parameter
+        logger.info(`Fetching attractions for user with ID: ${userId}`);
 
-module.exports = { generateAttractions, getAttractions, getAttraction, createAttraction, deleteAttraction, updateAttraction };
+        // Query the database for attractions where metadata.ownerID matches userId
+        const querySnapshot = await db.collection("attractions")
+            .where("metadata.ownerID", "==", userId)
+            .get();
+
+        // Check if any attractions were found
+        if (querySnapshot.empty) {
+            logger.warn(`No attractions found for user with ID: ${userId}`);
+            return res.status(404).json({ message: "No attractions found for this user" });
+        }
+
+        // Map the results to an array of attraction objects
+        const attractions = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+
+        logger.info(`Fetched ${attractions.length} attractions for user with ID: ${userId}`);
+        res.status(200).json({ attractions });
+    } catch (error) {
+        logger.error(`Error fetching attractions for user with ID: ${req.params.userId}:`, {
+            error: error.message,
+        });
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
+module.exports = { generateAttractions, getAttractions, getAttraction, getAttractionCount, createAttraction, deleteAttraction, updateAttraction, getUserAttractions };

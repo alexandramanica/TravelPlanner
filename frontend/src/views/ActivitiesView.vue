@@ -1,54 +1,51 @@
 <template>
-  <div class="attractions-container bg-light py-4">
+  <div class="activities-container bg-light py-4">
     <NavbarMenuForm />
     <div class="container">
-      <h1 class="page-title display-4 mb-4">Popular Attractions</h1>
+      <h1 class="page-title display-4 mb-4">My Activities</h1>
       <h2 class="page-subtitle mb-4">
-        Explore the most popular attractions around the world. From
-        breathtaking natural wonders and iconic landmarks to vibrant cultural
-        hotspots and hidden gems, your journey awaits.
+        Discover, plan, and organize your activities. From thrilling adventures to relaxing workshops, find your next great experience.
       </h2>
 
       <!-- Filter Toggle -->
       <div class="d-flex justify-content-between align-items-center mb-3">
         <button class="btn btn-outline-primary" @click="toggleFilter">
-          <i class="bi" :class="filterMyAttractions ? 'bi-person-check' : 'bi-list'"></i>
-          {{ filterMyAttractions ? 'Show All' : 'Show My Attractions' }}
+          <i class="bi" :class="filterMyActivities ? 'bi-person-check' : 'bi-list'"></i>
+          {{ filterMyActivities ? 'Show All' : 'Show My Activities' }}
         </button>
         <button class="btn btn-primary" @click="openAddModal">
-          <i class="bi bi-plus-circle"></i> Add Attraction
+          <i class="bi bi-plus-circle"></i> Add Activity
         </button>
       </div>
 
       <div class="row g-4">
         <div
-          v-for="card in filteredCards"
-          :key="card.id"
+          v-for="activity in filteredActivities"
+          :key="activity.id"
           class="col-12 col-md-6 col-lg-4"
         >
-          <div class="card h-100 border-0 shadow-sm attraction-card">
+          <div class="card h-100 border-0 shadow-sm activity-card">
             <div
               class="type-strip"
-              :class="gettypeColor(card.type)"
+              :class="getCategoryColor(activity.category)"
             ></div>
             <div class="card-body position-relative">
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <h3 class="card-title mb-0">
-                  <i class="bi bi-geo-alt me-2"></i>
-                  {{ card.name }}
+                  <i class="bi bi-calendar-event me-2"></i>
+                  {{ activity.name || 'Unnamed Activity' }}
                 </h3>
 
-                <!-- Conditionally Render Edit and Delete Buttons -->
-                <div v-if="card.metadata.ownerID === currentUserId">
+                <div v-if="activity.metadata.ownerID === currentUserId">
                   <button
                     class="btn btn-sm btn-outline-warning me-2"
-                    @click="openEditModal(card)"
+                    @click="openEditModal(activity)"
                   >
                     <i class="bi bi-pencil"></i> Edit
                   </button>
                   <button
                     class="btn btn-sm btn-outline-danger"
-                    @click="deleteAttraction(card.id)"
+                    @click="deleteActivity(activity.id)"
                   >
                     <i class="bi bi-trash"></i> Delete
                   </button>
@@ -57,28 +54,33 @@
 
               <p class="text-muted mb-3">
                 <i class="bi bi-geo-fill me-2"></i>
-                {{ card.city }}, {{ card.country }}
+                {{ activity.city || 'Unknown City' }}, {{ activity.country || 'Unknown Country' }}
               </p>
 
               <p class="card-text mb-3">
                 <i class="bi bi-info-circle me-2"></i>
-                {{ card.description }}
+                {{ activity.description || 'No description available.' }}
+              </p>
+
+              <p class="card-text mb-3">
+                <i class="bi bi-clock me-2"></i>
+                {{ activity.duration || 'N/A' }}
               </p>
 
               <p class="card-text mb-3">
                 <i class="bi bi-cash-coin me-2"></i>
-                ${{ card.entryFee }}
+                ${{ activity.price || 0 }}
               </p>
 
               <div class="button-group">
                 <button
                   class="btn btn-outline-primary me-2 w-100 mb-2"
-                  @click="openModal(card)"
+                  @click="openModal(activity)"
                 >
                   <i class="bi bi-book me-2"></i> Read More
                 </button>
                 <button class="btn btn-primary w-100">
-                  <i class="bi bi-suitcase me-2"></i> Add to My Trips
+                  <i class="bi bi-suitcase me-2"></i> Add to My Plans
                 </button>
               </div>
             </div>
@@ -88,70 +90,66 @@
     </div>
 
     <!-- Modals -->
-    <AttractionModal
+    <ActivityModal
       v-if="showModal"
       :isOpen="showModal"
-      :attraction="selectedAttraction"
+      :activity="selectedActivity"
       @close="showModal = false"
     />
 
-    <AddEditAttractionModal
+    <AddEditActivityModal
       v-if="showAddEditModal"
       :isOpen="showAddEditModal"
       :editMode="editMode"
-      :attraction="currentAttraction"
+      :activity="currentActivity"
       @close="closeAddEditModal"
-      @save="saveAttraction"
+      @save="saveActivity"
     />
   </div>
 </template>
-
 
 <script>
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 import NavbarMenuForm from "../components/NavbarMenuForm.vue";
-import AttractionModal from "../components/Modals/AttractionModal.vue";
-import AddEditAttractionModal from "../components/Modals/AddEditAttractionModal.vue";
+import ActivityModal from "../components/Modals/ActivityModal.vue";
+import AddEditActivityModal from "../components/Modals/AddEditActivityModal.vue";
 
 export default {
-  name: "AttractionsView",
+  name: "ActivitiesView",
   components: {
     NavbarMenuForm,
-    AttractionModal,
-    AddEditAttractionModal,
+    ActivityModal,
+    AddEditActivityModal,
   },
   setup() {
     const store = useStore();
-    const cards = ref([]);
+    const activities = ref([]);
     const showModal = ref(false);
-    const selectedAttraction = ref(null);
+    const selectedActivity = ref(null);
     const showAddEditModal = ref(false);
-    const currentAttraction = ref(null);
+    const currentActivity = ref(null);
     const editMode = ref(false);
-    const currentUserId = store.state.userId; 
-    const filterMyAttractions = ref(false); 
+    const currentUserId = store.state.userId;
+    const filterMyActivities = ref(false);
 
-    const gettypeColor = (type) => {
+    const getCategoryColor = (category) => {
       const colors = {
-        Historical: "type-historical",
-        Nature: "type-nature",
-        Cultural: "type-cultural",
-        Adventure: "type-adventure",
-        Entertainment: "type-entertainment",
+        Outdoor: "type-outdoor",
+        Indoor: "type-indoor",
+        Sports: "type-sports",
+        Workshop: "type-workshop",
         Other: "type-default",
       };
-      return colors[type] || "type-default";
+      return colors[category] || "type-default";
     };
 
-    
-    const fetchCards = async () => {
+    const fetchActivities = async () => {
       try {
         const token = store.state.token;
-        console.log("Token:", token);
         const response = await axios.get(
-          "http://localhost:8001/api/attraction/get-all-attractions",
+          "http://localhost:8001/api/activity/get-all-activities",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -159,163 +157,152 @@ export default {
           }
         );
 
-        cards.value = response.data.attractions.map((attraction) => ({
-          id: attraction.id,
-          name: attraction.name,
-          description: attraction.description,
-          country: attraction.country || "Unknown",
-          city: attraction.city || "Unknown",
-          address: attraction.address || "Unknown",
-          openingHours: attraction.openingHours || "Unknown",
-          entryFee: attraction.entryFee || "N/A",
-          type: attraction.type || "Uncategorized",
-          facilities: attraction.facilities || [],
-          tags: attraction.tags || [],
-          tips: attraction.tips || "No tips available",
-          metadata: attraction.metadata || {},
+        activities.value = response.data.activities.map((activity) => ({
+          id: activity.id ,
+          name: activity.name || "Unnamed Activity",
+          description: activity.description || "No description available.",
+          category: activity.category || "Other",
+          country: activity.country || "Unknown",
+          city: activity.city || "Unknown",
+          address: activity.address || "Unknown",
+          duration: activity.duration || "N/A",
+          price: activity.price || 0,
+          tags: activity.tags || [],
+          tips: activity.tips || "",
+          metadata: activity.metadata || {},
         }));
+
       } catch (error) {
-        console.error("Error fetching attractions:", error);
+        console.error("Error fetching activities:", error);
       }
     };
 
-    
-    const deleteAttraction = async (id) => {
+    const deleteActivity = async (id) => {
       try {
         const token = store.state.token;
-        await axios.delete(`http://localhost:8001/api/attraction/delete-attraction/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        cards.value = cards.value.filter((card) => card.id !== id);
+        await axios.delete(
+          `http://localhost:8001/api/activity/delete-activity/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        activities.value = activities.value.filter((activity) => activity.id !== id);
       } catch (error) {
-        console.error("Error deleting attraction:", error);
+        console.error("Error deleting activity:", error);
       }
     };
 
-    const saveAttraction = async (attraction) => {
+    const saveActivity = async (activity) => {
       try {
         const token = store.state.token;
         let response;
 
         if (editMode.value) {
           response = await axios.put(
-            `http://localhost:8001/api/attraction/update-attraction/${attraction.id}`,
-            attraction,
+            `http://localhost:8001/api/activity/update-activity/${activity.id}`,
+            activity,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             }
           );
-
-          console.log("Response:", response.data);
-
-          const updatedAttraction = response.data.attraction;
-          const index = cards.value.findIndex((card) => card.id === updatedAttraction.id);
-
+          const updatedActivity = response.data.activity;
+          const index = activities.value.findIndex((act) => act.id === updatedActivity.id);
           if (index !== -1) {
-            cards.value[index] = { ...cards.value[index], ...updatedAttraction };
-            cards.value = [...cards.value];
+            activities.value[index] = { ...activities.value[index], ...updatedActivity };
+            activities.value = [...activities.value];
           }
         } else {
           response = await axios.post(
-            "http://localhost:8001/api/attraction/create-attraction",
-            attraction,
+            "http://localhost:8001/api/activity/create-activity",
+            activity,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             }
           );
-          const newAttraction = response.data.attraction;
-          console.log("New Attraction:", newAttraction);
-          if (newAttraction && newAttraction.id) {
-            cards.value.push(newAttraction);
-            cards.value = [...cards.value];
-          }
+          activities.value.push(response.data.activity);
         }
-        
-        await fetchCards();
+
+        await fetchActivities();
 
         showAddEditModal.value = false;
         
       } catch (error) {
-        console.error("Error saving attraction:", error);
+        console.error("Error saving activity:", error);
       }
     };
 
     const toggleFilter = () => {
-      filterMyAttractions.value = !filterMyAttractions.value;
+      filterMyActivities.value = !filterMyActivities.value;
     };
 
-    const filteredCards = computed(() => {
-      return cards.value
-        .filter((card) => card && card.id) // Filtering Only valid cards 
-        .filter((card) => {
-          if (filterMyAttractions.value) {
-            return card.metadata?.ownerID === currentUserId;
+    const filteredActivities = computed(() => {
+      return activities.value
+        .filter((activity) => activity && activity.id) 
+        .filter((activity) => {
+          if (filterMyActivities.value) {
+            return activity.metadata?.ownerID === currentUserId;
           }
           return true;
         });
     });
 
-
-    const openModal = (attraction) => {
-      selectedAttraction.value = attraction;
+    const openModal = (activity) => {
+      selectedActivity.value = activity;
       showModal.value = true;
     };
 
     const openAddModal = () => {
-      currentAttraction.value = null;
+      currentActivity.value = null;
       editMode.value = false;
       showAddEditModal.value = true;
     };
 
-    const openEditModal = (attraction) => {
-      console.log("Opening edit modal for attraction:", attraction);
-      currentAttraction.value = attraction;
+    const openEditModal = (activity) => {
+      currentActivity.value = activity;
       editMode.value = true;
       showAddEditModal.value = true;
     };
 
     const closeAddEditModal = () => {
       showAddEditModal.value = false;
-      currentAttraction.value = null;
+      currentActivity.value = null;
     };
 
     onMounted(() => {
-      fetchCards();
+      fetchActivities();
     });
 
     return {
-      cards,
-      selectedAttraction,
+      activities,
+      selectedActivity,
       currentUserId,
       editMode,
-      currentAttraction,
+      currentActivity,
       showModal,
       showAddEditModal,
       openModal,
       openAddModal,
       openEditModal,
       closeAddEditModal,
-      saveAttraction,
-      deleteAttraction,
-      gettypeColor,
+      saveActivity,
+      deleteActivity,
+      getCategoryColor,
       toggleFilter,
-      filterMyAttractions,
-      filteredCards,
+      filterMyActivities,
+      filteredActivities,
     };
   },
 };
-
 </script>
 
 <style scoped>
-
-.attractions-container {
+.activities-container {
   min-height: 100vh;
 }
 
@@ -334,12 +321,12 @@ export default {
   margin-bottom: 1rem;
 }
 
-.attraction-card {
+.activity-card {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   overflow: hidden;
 }
 
-.attraction-card:hover {
+.activity-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
 }
@@ -353,28 +340,24 @@ export default {
   transition: width 0.2s ease-in-out;
 }
 
-.attraction-card:hover .type-strip {
+.activity-card:hover .type-strip {
   width: 8px;
 }
 
 /* Type colors */
-.type-historical {
-  background: linear-gradient(to bottom, #ffabcb, #f51664);
-}
-
-.type-nature {
+.type-outdoor {
   background: linear-gradient(to bottom, #d2fed3, #5b8d22);
 }
 
-.type-cultural {
-  background: linear-gradient(to bottom, #ebb4f5, #933ca2);
+.type-indoor {
+  background: linear-gradient(to bottom, #ffc8dd, #e63946);
 }
 
-.type-adventure {
-  background: linear-gradient(to bottom, #b9e0ff, #1688bd);
+.type-sports {
+  background: linear-gradient(to bottom, #ade8f4, #023e8a);
 }
 
-.type-entertainment {
+.type-workshop {
   background: linear-gradient(to bottom, #fff7ac, #ffc107);
 }
 
@@ -489,6 +472,4 @@ export default {
     padding: 0.4rem 0.8rem;
   }
 }
-
-
 </style>

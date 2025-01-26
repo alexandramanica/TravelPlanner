@@ -120,6 +120,25 @@ const getRestaurant = async (req, res) => {
     }
 };
 
+const getRestaurantCount = async (req, res) => {
+    try {
+        logger.info("Fetching the total count of restaurants...");
+
+        // Fetch all restaurants from the 'restaurants' collection
+        const querySnapshot = await db.collection("restaurants").get();
+
+        // Getting the count of restaurants
+        const restaurantCount = querySnapshot.size;
+
+        logger.info(`Total number of restaurants: ${restaurantCount}`);
+        res.status(200).json({ count: restaurantCount });
+    } catch (error) {
+        logger.error("Error fetching the restaurant count:", { error: error.message });
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
 const createRestaurant = async (req, res) => {
     try {
         logger.info("Adding new restaurant...");
@@ -204,7 +223,10 @@ const deleteRestaurant = async (req, res) => {
 const updateRestaurant = async (req, res) => {
     try {
         const restaurantId = req.params.restaurantId;
-        const { ownerId, ...updatedData } = req.body;
+        
+        const { ...updatedData } = req.body;
+        const ownerId = updatedData.metadata.ownerID;
+
         if (ownerId && ownerId !== req.user.id) {
             logger.warn(`Owner ID mismatch: User ${req.user.id} attempted to update restaurant for Owner ID ${ownerId}`);
             return res.status(403).json({ message: "You are not authorized to perform this action" });
@@ -238,7 +260,10 @@ const updateRestaurant = async (req, res) => {
         await restaurantRef.update(updatedData);
 
         logger.info(`Restaurant with ID ${restaurantId} updated successfully.`);
-        res.status(200).json({ message: "Restaurant updated successfully" });
+        res.status(200).json({
+            message: "Attraction updated successfully",
+            restaurant: { ...updatedData},
+        });
     } catch (error) {
         logger.error(`Error updating restaurant with ID ${req.params.restaurantId}:`, {
             error: error.message,
@@ -247,4 +272,4 @@ const updateRestaurant = async (req, res) => {
     }
 };
 
-module.exports = { generateRestaurants, getRestaurants, getRestaurant, createRestaurant, deleteRestaurant, updateRestaurant };
+module.exports = { generateRestaurants, getRestaurants, getRestaurant, getRestaurantCount, createRestaurant, deleteRestaurant, updateRestaurant };

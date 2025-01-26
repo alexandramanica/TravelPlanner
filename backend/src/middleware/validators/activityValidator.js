@@ -33,11 +33,6 @@ const validateActivity = [
         .withMessage("Address is required")
         .isString()
         .withMessage("Address must be a string"),
-    body("date")
-        .notEmpty()
-        .withMessage("Date is required")
-        .isISO8601()
-        .withMessage("Date must be a valid ISO 8601 string"),
     body("duration")
         .optional()
         .isString()
@@ -92,10 +87,6 @@ const validateActivityUpdates = [
         .optional()
         .isString()
         .withMessage("Address must be a string"),
-    body("date")
-        .optional()
-        .isISO8601()
-        .withMessage("Date must be a valid ISO 8601 string"),
     body("duration")
         .optional()
         .isString()

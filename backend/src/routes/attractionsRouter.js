@@ -1,12 +1,19 @@
 const express = require("express");
-const { validateAttraction, validateAttractionUpdates, validateAttractionId } = require("../middleware/validators/attractionValidator.js");
+const { validateAttraction, 
+    validateAttractionUpdates, 
+    validateAttractionId, 
+    validateGetUser } 
+    = require("../middleware/validators/attractionValidator.js");
+
 const {
     generateAttractions,
     createAttraction,
     getAttraction,
     getAttractions,
+    getAttractionCount,
     updateAttraction,
-    deleteAttraction
+    deleteAttraction,
+    getUserAttractions
 } = require("../controllers/attractionsController.js");
 const handleValidation = require("../middleware/validationMiddleware.js");
 const { verifyToken } = require("../middleware/authMiddleware.js");
@@ -36,6 +43,9 @@ attractionRouter.get(
     handleValidation, 
     getAttraction);
 
+// Get the count of attractions
+attractionRouter.get("/get-attraction-count", verifyToken, getAttractionCount);
+
 // Update an attraction
 attractionRouter.put(
     "/update-attraction/:attractionId",
@@ -53,5 +63,14 @@ attractionRouter.delete(
     validateAttractionId, 
     handleValidation, 
     deleteAttraction);
+
+// Get all attractions of a user
+attractionRouter.get(
+    "/get-user-attractions/:userId",
+    verifyToken,
+    validateGetUser,
+    handleValidation,
+    getUserAttractions
+);
 
 module.exports = attractionRouter;

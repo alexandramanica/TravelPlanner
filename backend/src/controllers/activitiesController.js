@@ -121,6 +121,25 @@ const getActivity = async (req, res) => {
     }
 };
 
+const getActivityCount = async (req, res) => {
+    try {
+        logger.info("Fetching the total count of activities...");
+
+        // Fetch all activities from the 'activities' collection
+        const querySnapshot = await db.collection("activities").get();
+
+        // Getting the count of activities
+        const activityCount = querySnapshot.size;
+
+        logger.info(`Total number of activities: ${activityCount}`);
+        res.status(200).json({ count: activityCount });
+    } catch (error) {
+        logger.error("Error fetching the activity count:", { error: error.message });
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
 const createActivity = async (req, res) => {
     try {
         logger.info("Adding new activity...");
@@ -143,7 +162,6 @@ const createActivity = async (req, res) => {
             country: req.body.country,
             city: req.body.city,
             address: req.body.address,
-            date: req.body.date,
             duration: req.body.duration,
             price: req.body.price,
             tags: req.body.tags,
@@ -206,7 +224,10 @@ const deleteActivity = async (req, res) => {
 const updateActivity = async (req, res) => {
     try {
         const activityId = req.params.activityId;
-        const { ownerId, ...updatedData } = req.body;
+        
+        const { ...updatedData } = req.body;
+        const ownerId = updatedData.metadata.ownerID;
+
         if (ownerId && ownerId !== req.user.id) {
             logger.warn(`Owner ID mismatch: User ${req.user.id} attempted to update activity for Owner ID ${ownerId}`);
             return res.status(403).json({ message: "You are not authorized to perform this action" });
@@ -240,7 +261,10 @@ const updateActivity = async (req, res) => {
         await activityRef.update(updatedData);
 
         logger.info(`Activity with ID ${activityId} updated successfully.`);
-        res.status(200).json({ message: "Activity updated successfully" });
+        res.status(200).json({
+            message: "Attraction updated successfully",
+            activity: { ...updatedData},
+        });
     } catch (error) {
         logger.error(`Error updating activity with ID ${req.params.activityId}:`, {
             error: error.message,
@@ -249,4 +273,4 @@ const updateActivity = async (req, res) => {
     }
 };
 
-module.exports = { generateActivities, getActivities, getActivity, createActivity, deleteActivity, updateActivity };
+module.exports = { generateActivities, getActivities, getActivity, getActivityCount, createActivity, deleteActivity, updateActivity };

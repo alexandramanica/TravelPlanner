@@ -9,6 +9,7 @@ const {
     createRestaurant,
     getRestaurant,
     getRestaurants,
+    getRestaurantCount,
     updateRestaurant,
     deleteRestaurant
 } = require("../controllers/restaurantsController.js");
@@ -40,6 +41,9 @@ restaurantRouter.get(
     handleValidation,
     getRestaurant
 );
+
+// Get the number of restaurants
+restaurantRouter.get("/get-restaurant-count", verifyToken, getRestaurantCount);
 
 // Update a restaurant
 restaurantRouter.put(

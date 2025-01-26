@@ -4,6 +4,7 @@ export default createStore({
   state: {
     userId: null,
     token: null,
+    cards: [],
   },
   getters: {
     isAuthenticated(state) {

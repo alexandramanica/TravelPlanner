@@ -9,6 +9,7 @@ const {
     createActivity,
     getActivity,
     getActivities,
+    getActivityCount,
     updateActivity,
     deleteActivity
 } = require("../controllers/activitiesController.js");
@@ -40,6 +41,11 @@ activityRouter.get(
     handleValidation,
     getActivity
 );
+
+// Get the total number of activities
+activityRouter.get("/get-activity-count", 
+    verifyToken, 
+    getActivityCount);
 
 // Update an activity
 activityRouter.put(

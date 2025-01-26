@@ -140,7 +140,6 @@ export default {
 
         showAlert.value = true;
         setTimeout(() => {
-          console.log('Setting showAlert to false'); 
           showAlert.value = false;
         }, 5000);
       }

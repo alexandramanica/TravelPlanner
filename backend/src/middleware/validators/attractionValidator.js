@@ -50,22 +50,6 @@ const validateAttraction = [
         .optional()
         .isArray()
         .withMessage("Tags must be an array of strings"),
-    body("transportationOptions")
-        .optional()
-        .isArray()
-        .withMessage("Transportation options must be an array"),
-    body("transportationOptions.*.type")
-        .optional()
-        .isString()
-        .withMessage("Each transportation option must have a type as a string"),
-    body("transportationOptions.*.details")
-        .optional()
-        .isString()
-        .withMessage("Each transportation option must have details as a string"),
-    body("transportationOptions.*.cost")
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage("Each transportation option must have a cost as a positive number"),
     body("tips")
         .optional()
         .isString()
@@ -120,22 +104,6 @@ const validateAttractionUpdates = [
         .optional()
         .isArray()
         .withMessage("Tags must be an array of strings"),
-    body("transportationOptions")
-        .optional()
-        .isArray()
-        .withMessage("Transportation options must be an array"),
-    body("transportationOptions.*.type")
-        .optional()
-        .isString()
-        .withMessage("Each transportation option must have a type as a string"),
-    body("transportationOptions.*.details")
-        .optional()
-        .isString()
-        .withMessage("Each transportation option must have details as a string"),
-    body("transportationOptions.*.cost")
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage("Each transportation option must have a cost as a positive number"),
     body("tips")
         .optional()
         .isString()
@@ -155,7 +123,15 @@ const validateAttractionId = [
         .withMessage("Attraction ID must be a string"),
 ];
 
+const validateGetUser = [
+    param("userId")
+        .isString()
+        .withMessage("User ID must be a string")
+        .isLength({ min: 1 })
+        .withMessage("User ID cannot be empty"),
+];
+
 
 module.exports = {
-    validateAttraction, validateAttractionUpdates, validateAttractionId
+    validateAttraction, validateAttractionUpdates, validateAttractionId, validateGetUser
 };
