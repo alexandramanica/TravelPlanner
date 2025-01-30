@@ -16,6 +16,10 @@
             <strong>Description:</strong> {{ attraction.description }}
           </p>
           <p>
+            <i class="bi bi-bank me-2"></i>
+            <strong>Type:</strong> {{ attraction.type }}
+          </p>
+          <p>
             <i class="bi bi-house-door me-2"></i>
             <strong>Address:</strong> {{ attraction.address }}
           </p>

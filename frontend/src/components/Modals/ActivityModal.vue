@@ -16,6 +16,10 @@
             <strong>Description:</strong> {{ activity.description }}
           </p>
           <p>
+            <i class="bi bi-airplane-engines me-2"></i>
+            <strong>Type:</strong> {{ activity.category }}
+          </p>
+          <p>
             <i class="bi bi-house-door me-2"></i>
             <strong>Address:</strong> {{ activity.address }}
           </p>

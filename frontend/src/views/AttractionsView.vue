@@ -77,7 +77,10 @@
                 >
                   <i class="bi bi-book me-2"></i> Read More
                 </button>
-                <button class="btn btn-primary w-100">
+                <button
+                  class="btn btn-primary w-100"
+                  @click="openTripSelectionModal(card)"
+                >
                   <i class="bi bi-suitcase me-2"></i> Add to My Trips
                 </button>
               </div>
@@ -103,6 +106,18 @@
       @close="closeAddEditModal"
       @save="saveAttraction"
     />
+
+    <TripSelectionModal
+      v-if="showTripModal"
+      :isOpen="showTripModal"
+      :trips="userTrips"
+      itemType="attraction"
+      :error="error"
+      :showAlert="showAlert"
+      @close="closeTripModal"
+      @confirm="addAttractionToTrip"
+    />
+
   </div>
 </template>
 
@@ -114,6 +129,7 @@ import { useStore } from "vuex";
 import NavbarMenuForm from "../components/NavbarMenuForm.vue";
 import AttractionModal from "../components/Modals/AttractionModal.vue";
 import AddEditAttractionModal from "../components/Modals/AddEditAttractionModal.vue";
+import TripSelectionModal from "../components/Modals/TripSelectionModal.vue";
 
 export default {
   name: "AttractionsView",
@@ -121,17 +137,26 @@ export default {
     NavbarMenuForm,
     AttractionModal,
     AddEditAttractionModal,
+    TripSelectionModal,
   },
   setup() {
     const store = useStore();
     const cards = ref([]);
-    const showModal = ref(false);
-    const selectedAttraction = ref(null);
-    const showAddEditModal = ref(false);
-    const currentAttraction = ref(null);
+    const userTrips = ref([]);
+    const filterMyAttractions = ref(false); 
+
     const editMode = ref(false);
     const currentUserId = store.state.userId; 
-    const filterMyAttractions = ref(false); 
+
+    const selectedAttraction = ref(null);
+    const currentAttraction = ref(null);
+
+    const showModal = ref(false);
+    const showAddEditModal = ref(false);
+    const showTripModal = ref(false);
+
+    const error = ref(""); 
+    const showAlert = ref(false); 
 
     const gettypeColor = (type) => {
       const colors = {
@@ -145,7 +170,6 @@ export default {
       return colors[type] || "type-default";
     };
 
-    
     const fetchCards = async () => {
       try {
         const token = store.state.token;
@@ -179,7 +203,29 @@ export default {
       }
     };
 
-    
+    const fetchTrips = async () => {
+      try {
+        const token = store.state.token;
+        const userId = store.state.userId;
+
+        const response = await axios.get(
+          `http://localhost:8001/api/trip/get-user-trips/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        userTrips.value = response.data.trips.map((trip) => ({
+          id: trip.id,
+          name: trip.name,
+        }));
+      } catch (error) {
+        console.error("Error fetching user trips:", error);
+      }
+    };
+
     const deleteAttraction = async (id) => {
       try {
         const token = store.state.token;
@@ -246,6 +292,38 @@ export default {
       }
     };
 
+    const addAttractionToTrip = async (tripId) => {
+      try {
+        const token = store.state.token;
+        const attractionId = selectedAttraction.value.id; 
+
+        await axios.put(
+          `http://localhost:8001/api/trip/${tripId}/add-attraction`, 
+          { attractionId }, 
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, 
+            },
+          }
+        );
+
+        console.log(`Attraction ${attractionId} added to trip ${tripId}`);
+        closeTripModal(); 
+      } catch (err) {
+        console.error("Error adding attraction to trip:", err);
+
+        const message = err.response?.data?.message || "An error occurred. Please try again later.";
+        error.value = message;
+
+        showAlert.value = true;
+        setTimeout(() => {
+          showAlert.value = false;
+        }, 5000);
+      
+      }
+    };
+
+
     const toggleFilter = () => {
       filterMyAttractions.value = !filterMyAttractions.value;
     };
@@ -274,15 +352,26 @@ export default {
     };
 
     const openEditModal = (attraction) => {
-      console.log("Opening edit modal for attraction:", attraction);
       currentAttraction.value = attraction;
       editMode.value = true;
       showAddEditModal.value = true;
     };
 
+    const openTripSelectionModal = (attraction) => {
+      selectedAttraction.value = attraction;
+      showTripModal.value = true; 
+      fetchTrips(); 
+    };
+
+    
     const closeAddEditModal = () => {
       showAddEditModal.value = false;
       currentAttraction.value = null;
+    };
+
+    const closeTripModal = () => {
+      showTripModal.value = false;
+      selectedAttraction.value = null;
     };
 
     onMounted(() => {
@@ -291,22 +380,37 @@ export default {
 
     return {
       cards,
-      selectedAttraction,
-      currentUserId,
+      userTrips,
+      filterMyAttractions,
+      filteredCards,
+
       editMode,
+      currentUserId,
+ 
+      selectedAttraction,
       currentAttraction,
+
       showModal,
       showAddEditModal,
+      showTripModal,
+
       openModal,
       openAddModal,
       openEditModal,
+      openTripSelectionModal,
+
       closeAddEditModal,
+      closeTripModal,
+
       saveAttraction,
       deleteAttraction,
+      addAttractionToTrip,
+
       gettypeColor,
       toggleFilter,
-      filterMyAttractions,
-      filteredCards,
+
+      error,
+      showAlert,
     };
   },
 };
@@ -396,7 +500,7 @@ export default {
   margin-top: auto;
 }
 
-/* Custom hover effects for buttons */
+/* hover effects for buttons */
 .btn {
   transition: all 0.2s ease-in-out;
 }

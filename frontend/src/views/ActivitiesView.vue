@@ -79,8 +79,11 @@
                 >
                   <i class="bi bi-book me-2"></i> Read More
                 </button>
-                <button class="btn btn-primary w-100">
-                  <i class="bi bi-suitcase me-2"></i> Add to My Plans
+                <button
+                  class="btn btn-primary w-100"
+                  @click="openTripSelectionModal(activity)"
+                >
+                  <i class="bi bi-suitcase me-2"></i> Add to My Trips
                 </button>
               </div>
             </div>
@@ -105,6 +108,17 @@
       @close="closeAddEditModal"
       @save="saveActivity"
     />
+
+    <TripSelectionModal
+      v-if="showTripModal"
+      :isOpen="showTripModal"
+      :trips="userTrips"
+      itemType="activity"
+      :error="error"
+      :showAlert="showAlert"
+      @close="closeTripModal"
+      @confirm="addActivityToTrip"
+    />
   </div>
 </template>
 
@@ -115,6 +129,7 @@ import { useStore } from "vuex";
 import NavbarMenuForm from "../components/NavbarMenuForm.vue";
 import ActivityModal from "../components/Modals/ActivityModal.vue";
 import AddEditActivityModal from "../components/Modals/AddEditActivityModal.vue";
+import TripSelectionModal from "../components/Modals/TripSelectionModal.vue";
 
 export default {
   name: "ActivitiesView",
@@ -122,17 +137,26 @@ export default {
     NavbarMenuForm,
     ActivityModal,
     AddEditActivityModal,
+    TripSelectionModal,
   },
   setup() {
     const store = useStore();
     const activities = ref([]);
-    const showModal = ref(false);
-    const selectedActivity = ref(null);
-    const showAddEditModal = ref(false);
-    const currentActivity = ref(null);
+    const userTrips = ref([]);
+    const filterMyActivities = ref(false);
+
     const editMode = ref(false);
     const currentUserId = store.state.userId;
-    const filterMyActivities = ref(false);
+
+    const selectedActivity = ref(null);
+    const currentActivity = ref(null);
+
+    const showModal = ref(false);
+    const showAddEditModal = ref(false);
+    const showTripModal = ref(false);
+
+    const error = ref(""); 
+    const showAlert = ref(false); 
 
     const getCategoryColor = (category) => {
       const colors = {
@@ -174,6 +198,29 @@ export default {
 
       } catch (error) {
         console.error("Error fetching activities:", error);
+      }
+    };
+
+    const fetchTrips = async () => {
+      try {
+        const token = store.state.token;
+        const userId = store.state.userId;
+
+        const response = await axios.get(
+          `http://localhost:8001/api/trip/get-user-trips/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        userTrips.value = response.data.trips.map((trip) => ({
+          id: trip.id,
+          name: trip.name,
+        }));
+      } catch (error) {
+        console.error("Error fetching user trips:", error);
       }
     };
 
@@ -237,6 +284,43 @@ export default {
       }
     };
 
+    const addActivityToTrip = async (tripId) => {
+      try {
+        
+        console.log("Adding activity to trip:", selectedActivity.value, tripId);
+
+        if (!selectedActivity.value || !selectedActivity.value.id) {
+          console.error("No activity selected or activity ID is missing.");
+        }
+
+        const token = store.state.token;
+        const activityId = selectedActivity.value.id; // Define activityId here
+
+        await axios.put(
+          `http://localhost:8001/api/trip/${tripId}/add-activity`,
+          { activityId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log(`Activity ${activityId} added to trip ${tripId}`);
+        closeTripModal();
+      } catch (err) {
+        console.error("Error adding activity to trip:", err);
+
+        const message = err.response?.data?.message || "An error occurred. Please try again later.";
+        error.value = message;
+
+        showAlert.value = true;
+        setTimeout(() => {
+          showAlert.value = false;
+        }, 5000);
+      }
+    };
+
     const toggleFilter = () => {
       filterMyActivities.value = !filterMyActivities.value;
     };
@@ -269,9 +353,20 @@ export default {
       showAddEditModal.value = true;
     };
 
+    const openTripSelectionModal = (activity) => {
+      selectedActivity.value = activity;
+      showTripModal.value = true;
+      fetchTrips();
+    };
+
     const closeAddEditModal = () => {
       showAddEditModal.value = false;
       currentActivity.value = null;
+    };
+
+    const closeTripModal = () => {
+      showTripModal.value = false;
+      selectedActivity.value = null;
     };
 
     onMounted(() => {
@@ -280,22 +375,37 @@ export default {
 
     return {
       activities,
-      selectedActivity,
+      userTrips,
+      filterMyActivities,
+      filteredActivities,
+
       currentUserId,
       editMode,
+
+      selectedActivity,
       currentActivity,
+
       showModal,
       showAddEditModal,
+      showTripModal,
+
       openModal,
       openAddModal,
       openEditModal,
+      openTripSelectionModal,
+
       closeAddEditModal,
+      closeTripModal,
+
       saveActivity,
       deleteActivity,
+      addActivityToTrip,
+
       getCategoryColor,
       toggleFilter,
-      filterMyActivities,
-      filteredActivities,
+
+      error,
+      showAlert
     };
   },
 };

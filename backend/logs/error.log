@@ -65,3 +65,8 @@
 [2025-01-19T00:30:01.211Z] ERROR: Error updating restaurant with ID 0tFH5ULOEiyGRml5P3tg:
 [2025-01-19T00:30:02.555Z] ERROR: Error fetching user with ID undefined:
 [2025-01-19T00:30:02.556Z] ERROR: Error updating restaurant with ID 0tFH5ULOEiyGRml5P3tg:
+[2025-01-26T13:25:04.467Z] ERROR: Error creating trip:
+[2025-01-26T15:11:19.853Z] ERROR: Error adding attraction to trip: Update() requires either a single JavaScript object or an alternating list of field/value pairs that can be followed by an optional precondition. Value for argument "dataOrField" is not a valid Firestore value. Cannot use "undefined" as a Firestore value (found in field "attractionsSnapshot.`0`.entryFee"). If you want to ignore undefined values, enable `ignoreUndefinedProperties`.
+[2025-01-29T23:32:02.635Z] ERROR: Error updating trip with ID aAKXw9nBqCY1Q48wpApX:
+[2025-01-29T23:34:48.208Z] ERROR: Error updating trip with ID aAKXw9nBqCY1Q48wpApX:
+[2025-01-29T23:34:54.268Z] ERROR: Error updating trip with ID aAKXw9nBqCY1Q48wpApX:

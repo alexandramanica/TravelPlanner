@@ -75,8 +75,11 @@
                   >
                     <i class="bi bi-book me-2"></i> Read More
                   </button>
-                  <button class="btn btn-primary w-100">
-                    <i class="bi bi-suitcase me-2"></i> Add to My Favorites
+                  <button
+                    class="btn btn-primary w-100"
+                    @click="openTripSelectionModal(card)"
+                  >
+                    <i class="bi bi-suitcase me-2"></i> Add to My Trips
                   </button>
                 </div>
               </div>
@@ -101,6 +104,17 @@
         @close="closeAddEditModal"
         @save="saveRestaurant"
       />
+
+      <TripSelectionModal
+      v-if="showTripModal"
+      :isOpen="showTripModal"
+      :trips="userTrips"
+      itemType="restaurant"
+      :error="error"
+      :showAlert="showAlert"
+      @close="closeTripModal"
+      @confirm="addRestaurantToTrip"
+    />
     </div>
   </template>
   
@@ -111,6 +125,7 @@
   import NavbarMenuForm from "../components/NavbarMenuForm.vue";
   import RestaurantModal from "../components/Modals/RestaurantModal.vue";
   import AddEditRestaurantModal from "../components/Modals/AddEditRestaurantModal.vue";
+  import TripSelectionModal from "../components/Modals/TripSelectionModal.vue";
   
   export default {
     name: "RestaurantsView",
@@ -118,17 +133,26 @@
       NavbarMenuForm,
       RestaurantModal,
       AddEditRestaurantModal,
+      TripSelectionModal,
     },
     setup() {
       const store = useStore();
       const cards = ref([]);
-      const showModal = ref(false);
-      const selectedRestaurant = ref(null);
-      const showAddEditModal = ref(false);
-      const currentRestaurant = ref(null);
+      const userTrips = ref([]);
+      const filterMyRestaurants = ref(false);
+
       const editMode = ref(false);
       const currentUserId = store.state.userId;
-      const filterMyRestaurants = ref(false);
+
+      const selectedRestaurant = ref(null);
+      const currentRestaurant = ref(null);
+
+      const showModal = ref(false);
+      const showAddEditModal = ref(false);
+      const showTripModal = ref(false);
+
+      const error = ref(null);
+      const showAlert = ref(false);
 
       const getCuisineColor = (cuisine) => {
       const colors = {
@@ -159,6 +183,29 @@
           console.error("Error fetching restaurants:", error);
         }
       };
+
+      const fetchTrips = async () => {
+      try {
+        const token = store.state.token;
+        const userId = store.state.userId;
+
+        const response = await axios.get(
+          `http://localhost:8001/api/trip/get-user-trips/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        userTrips.value = response.data.trips.map((trip) => ({
+          id: trip.id,
+          name: trip.name,
+        }));
+      } catch (error) {
+        console.error("Error fetching user trips:", error);
+      }
+    };
   
       const deleteRestaurant = async (id) => {
         try {
@@ -221,6 +268,36 @@
           console.error("Error saving restaurant:", error);
         }
       };
+
+      const addRestaurantToTrip = async (tripId) => {
+        try {
+          const token = store.state.token;
+          const restaurantId = selectedRestaurant.value.id;
+
+          await axios.put(
+            `http://localhost:8001/api/trip/${tripId}/add-restaurant`, 
+            { restaurantId }, 
+            {
+              headers: {
+                Authorization: `Bearer ${token}`, 
+              },
+            }
+          );
+
+          console.log(`Restaurant ${restaurantId} added to trip ${tripId}`);
+          closeTripModal(); 
+        } catch (err) {
+          console.error("Error adding restaurant to trip:", error);
+
+          const message = err.response?.data?.message || "An error occurred. Please try again later.";
+          error.value = message;
+
+          showAlert.value = true;
+          setTimeout(() => {
+            showAlert.value = false;
+          }, 5000);
+          }
+      };
   
       const toggleFilter = () => {
         filterMyRestaurants.value = !filterMyRestaurants.value;
@@ -253,10 +330,21 @@
         editMode.value = true;
         showAddEditModal.value = true;
       };
+
+      const openTripSelectionModal = (restaurant) => {
+        selectedRestaurant.value = restaurant;
+        showTripModal.value = true; 
+        fetchTrips(); 
+      };
   
       const closeAddEditModal = () => {
         showAddEditModal.value = false;
         currentRestaurant.value = null;
+      };
+
+      const closeTripModal = () => {
+        showTripModal.value = false;
+        selectedRestaurant.value = null;
       };
   
       onMounted(() => {
@@ -265,22 +353,38 @@
   
       return {
         cards,
-        getCuisineColor,
-        selectedRestaurant,
+        userTrips,
+        filterMyRestaurants,
+        filteredCards,
+
         currentUserId,
         editMode,
+
+        selectedRestaurant,
         currentRestaurant,
+
         showModal,
         showAddEditModal,
+        showTripModal,
+
         openModal,
         openAddModal,
         openEditModal,
+        openTripSelectionModal,
+
         closeAddEditModal,
+        closeTripModal,
+
         saveRestaurant,
         deleteRestaurant,
+        addRestaurantToTrip,
+
         toggleFilter,
-        filterMyRestaurants,
-        filteredCards,
+        getCuisineColor,
+
+        error,
+        showAlert,
+
       };
     },
   };

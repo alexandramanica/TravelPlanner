@@ -46,6 +46,11 @@
                   Activities
                 </router-link>
               </li>
+              <li class="nav-item">
+              <button class="btn btn-outline-light ms-3" @click="logout">
+                <i class="bi bi-box-arrow-right me-1"></i> Log Out
+              </button>
+            </li>
             </ul>
           </div>
         </div>
@@ -58,9 +63,48 @@
   
   
   <script>
-    export default {
-        name: "NavbarMenuForm",
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
+import axios from "axios";
+
+export default {
+  name: "NavbarMenuForm",
+  setup() {
+    const store = useStore();
+    const router = useRouter();
+    const token = store.state.token;
+
+    const logout = async () => {
+      try {
+        const token = store.state.token;
+
+        if (!token) {
+          console.error("Token is missing. Please log in.");
+          return;
+        }
+
+        await axios.post(
+          `http://localhost:8001/api/auth/logout`,
+          {}, 
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log("Logout successful");
+
+        store.dispatch("logout");
+        router.push("/login");
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
     };
+
+    return { logout, token };
+  },
+};
   </script>
   
  

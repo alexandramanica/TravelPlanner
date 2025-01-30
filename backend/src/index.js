@@ -9,6 +9,7 @@ const authRouter = require('./routes/authRouter.js');
 const atractionRouter = require('./routes/attractionsRouter.js')
 const activityRouter = require('./routes/activitiesRouter.js');
 const restaurantRouter = require('./routes/restaurantRouter.js');
+const tripRouter = require('./routes/tripRouter.js');
 
 require('dotenv').config();
 
@@ -24,6 +25,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/attraction", atractionRouter)
 app.use("/api/activity", activityRouter);
 app.use("/api/restaurant", restaurantRouter);
+app.use("/api/trip", tripRouter);
 
 const port = process.env.PORT || 8001;
 app.listen(port, () => {
