@@ -14,4 +14,4 @@ const logger = winston.createLogger({
     ],
 });
 
-module.exports = logger; // CommonJS export
+module.exports = logger; 

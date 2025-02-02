@@ -67,7 +67,7 @@ const loginUser = async (req, res) => {
         }
 
         // Check password and generate JWT token
-        const userDoc = userSnapshot.docs[0]; //Email is unique - acces the first element in the array of docs returned by the query
+        const userDoc = userSnapshot.docs[0]; //Email is unique
         const userData = userDoc.data();
 
         const isPasswordValid = await bcrypt.compare(password, userData.password);

@@ -294,7 +294,7 @@ export default {
         }
 
         const token = store.state.token;
-        const activityId = selectedActivity.value.id; // Define activityId here
+        const activityId = selectedActivity.value.id; 
 
         await axios.put(
           `http://localhost:8001/api/trip/${tripId}/add-activity`,
@@ -556,7 +556,7 @@ export default {
   color: white;
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 768px) {
   .card-title {
     font-size: 1.1rem;

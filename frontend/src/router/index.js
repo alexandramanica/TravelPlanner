@@ -8,6 +8,7 @@ import AttractionsView from '../views/AttractionsView.vue'
 import RestaurantsView from '@/views/RestaurantsView.vue'
 import ActivitiesView from '@/views/ActivitiesView.vue'
 import TripsView from '@/views/TripsView.vue'
+import NotFoundView from '@/views/NotFoundView.vue';
 
 const routes = [
   {
@@ -34,25 +35,26 @@ const routes = [
     path: '/attractions',
     name: 'attractions',
     component: AttractionsView,
-    meta: { requiresAuth: true }
   },
   {
     path: '/restaurants',
     name: 'restaurants',
     component: RestaurantsView,
-    meta: { requiresAuth: true }
   },
   {
     path: '/activities',
     name: 'activities',
     component: ActivitiesView,
-    meta: { requiresAuth: true }
   },
   {
     path: '/trips',
     name: 'trips',
     component: TripsView,
-    meta: { requiresAuth: true }
+  },
+  {
+    path: '/:pathMatch(.*)',
+    name: 'not-found',
+    component: NotFoundView
   }
 ]
 
@@ -62,7 +64,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth && !store.getters.isAuthenticated) {
+  if (!['login', 'reigster', 'home'].includes(to.name) && !store.getters.isAuthenticated) {
     console.warn('User not authenticated')
     next("/login");
   } else {
